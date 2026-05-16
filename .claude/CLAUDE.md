@@ -174,6 +174,19 @@ Read that file before implementing any agent step. Key rules:
 - `JUCE_WEB_BROWSER=0` and `JUCE_USE_CURL=0` always in compile definitions
 - `CMAKE_MSVC_RUNTIME_LIBRARY "MultiThreaded$<$<CONFIG:Debug>:Debug>"` in root CMakeLists.txt
 
+## Skills
+
+| Skill | Location | Invocation | Role |
+|---|---|---|---|
+| `new-plugin` | `.claude/skills/new-plugin/SKILL.md` | `"Create new plugin called [Name], type [synth/fx]"` | Copies skeleton to `D:\Dev\Plugins\[Name]\`, instantiates template, scaffolds `.ideas/`, updates CLAUDE.md |
+| `build-compile` | `.claude/skills/build-compile/SKILL.md` | `"Build"` or `"/build-compile"` | Runs CMake configure + Release build, reports VST3 path and any errors |
+| `plugin-ideation` | `.claude/skills/plugin-ideation/SKILL.md` | `"/plugin-ideation"` | Refines `.ideas/` contracts through structured Q&A before implementation starts |
+| `plugin-improve` | `.claude/skills/plugin-improve/SKILL.md` | `"/plugin-improve"` | Applies targeted improvements to an existing plugin without full pipeline re-run |
+| `status` | `.claude/skills/status/SKILL.md` | `"Run status"` or `"/status"` | Single-line snapshot: plugin name, stage, last gate, next agent, missing gate files |
+| `resume` | `.claude/skills/resume/SKILL.md` | `"Resume"` or `"/resume"` | Reads last completed gate and activates the correct next agent automatically |
+| `version-bump` | `.claude/skills/version-bump/SKILL.md` | `"Bump version to [x.x.x]"` | Updates version string in `creative-brief.md` and `CMakeLists.txt` |
+| `new-version` | `.claude/skills/new-version/SKILL.md` | `"Start new version [x.x.x] of [PluginName]"` | Archives current `.ideas/` to `versions/v[N]/`, resets pipeline to planning with v[N] as baseline |
+
 ## Troubleshooting Knowledge Base
 
 Index: `troubleshooting/index.md`
