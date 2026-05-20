@@ -13,6 +13,8 @@ Implements the JUCE native plugin GUI. Replaces the placeholder editor with a co
 - `plugins/[PluginName]/.ideas/parameter-spec.md`
 - `plugins/[PluginName]/.ideas/creative-brief.md` (UX principles section)
 - `plugins/[PluginName]/Source/PluginProcessor.h` (public `apvts` member)
+- `plugins/[PluginName]/ui-design-spec.md` (resolved palette + layout)
+- `plugins/[PluginName]/Source/Assets/logo.png`
 
 ## Writes To
 - `plugins/[PluginName]/Source/PluginEditor.h`
@@ -108,13 +110,29 @@ for (int i = 0; i < N; ++i)
 }
 ```
 
-### 4. Build
+### 4. Apply Studio Identity
+
+Read `plugins/[PluginName]/ui-design-spec.md` before writing any GUI code. Apply all resolved values:
+
+- Create a custom class inheriting `juce::LookAndFeel_V4`; set all ColourId overrides in its constructor using hex values from the ui-design-spec.md LookAndFeel ColourId Map
+- Call `setLookAndFeel(&customLookAndFeel)` in the PluginEditor constructor; `setLookAndFeel(nullptr)` in the destructor (missing nullptr → crash on close)
+- Implement double-ring knob style: outer ring Background secondary fill + Border stroke; inner ring Background primary fill + Accent stroke; pointer line Accent, 2px, rounded cap
+- Load logo via `juce::ImageCache::getFromFile(juce::File(logoPath))` where logoPath resolves to `Source/Assets/logo.png`; check `logoImage.isValid()` before drawing; render in `paint()` after all base painting, bottom-right corner, 8px margins, 80×80px max
+- Add plugin name label top-left — `FontOptions().withHeight(14.0f)`, Text primary hex, font-weight 500
+- Add studio name label "ORIENT PLUGINS" — uppercase, Text secondary hex, `FontOptions().withHeight(10.0f)`
+- Add version badge top-right — rounded rectangle Accent light hex fill, Accent primary hex text
+- Add value readout label below each knob — Text primary hex, `FontOptions().withHeight(10.0f)`, bold
+- Add active indicator dot bottom-left — 6px filled circle, Accent primary hex
+- Add version string bottom-right — Border hex, `FontOptions().withHeight(9.0f)`
+- Never hardcode any color value — every color comes from ui-design-spec.md
+
+### 5. Build
 ```
 cmake --build build --config Release --parallel
 ```
 From `D:\Dev\PluginSkeleton\`. Report result. On failure: fix, rebuild.
 
-### 5. Smoke-check the GUI
+### 6. Smoke-check the GUI
 Confirm the VST3 exists at:
 ```
 build\plugins\[PluginName]\[PluginName]_artefacts\Release\VST3\[ProductName].vst3
@@ -127,6 +145,7 @@ build\plugins\[PluginName]\[PluginName]_artefacts\Release\VST3\[ProductName].vst
 - `juce::Font(size, style)` two-argument constructor is deprecated in JUCE 8. Always use `juce::Font(juce::FontOptions().withHeight(N).withStyle("Bold"))`.
 - Every parameter in parameter-spec.md must have a visible control with a working APVTS attachment.
 - Build must pass before this agent reports complete.
+- Never hardcode any color value — read all colors exclusively from ui-design-spec.md.
 
 ## Output Format
 ```

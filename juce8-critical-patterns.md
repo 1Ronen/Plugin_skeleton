@@ -265,3 +265,38 @@ The 4-character `PLUGIN_CODE` must be unique across all plugins. Collisions caus
 | CRT mismatch crash on DAW load | Runtime library mismatch | Set `CMAKE_MSVC_RUNTIME_LIBRARY` in root CMakeLists.txt |
 | `JuceHeader.h: No such file` | `juce_generate_juce_header` not called or called before `target_link_libraries` | Fix CMakeLists.txt order |
 | Splash screen at startup | `JUCE_DISPLAY_SPLASH_SCREEN` not set | Add to `target_compile_definitions` |
+
+---
+
+## Studio Branding Patterns
+
+### LookAndFeel setup
+- Always create a custom class inheriting from `LookAndFeel_V4`
+- Override in PluginEditor constructor: `setLookAndFeel(&customLookAndFeel)`
+- Destructor: `setLookAndFeel(nullptr)` — never skip this, causes crash on close
+- All ColourId overrides go in the custom LookAndFeel constructor
+- Never call `setColour()` directly on components — use LookAndFeel only
+
+### Logo rendering
+- Load once in PluginEditor constructor:
+  `logoImage = ImageCache::getFromFile(File(logoPath))`
+- Render in `paint()` after all base painting:
+  ```cpp
+  g.drawImageWithin(logoImage, x, y, w, h,
+      RectanglePlacement::centred | RectanglePlacement::onlyReduceInSize);
+  ```
+- Always check `logoImage.isValid()` before drawing — missing file = crash
+- Logo path must be absolute or resolved relative to plugin binary
+
+### Knob double-ring pattern
+- Outer ring: `drawEllipse` with Background secondary fill, Border stroke
+- Inner ring: `drawEllipse` with Background primary fill, Accent stroke
+- Pointer line: `drawLine` from center outward, Accent color, 2px stroke,
+  rounded cap, rotated by normalised value mapped to -135° to +135°
+- Value label: drawn below knob rect, centered, Text primary, 10px bold
+
+### Common branding mistakes
+- Forgetting `setLookAndFeel(nullptr)` in destructor → crash on plugin close
+- Using `ImageCache::getFromFile` with relative path → not found in DAW context
+- Drawing logo before background is painted → logo gets overdrawn
+- Hardcoding colors instead of reading from LookAndFeel → breaks identity system

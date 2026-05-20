@@ -49,6 +49,15 @@ Skeleton template: `D:\Dev\PluginSkeleton\template\`
 | `dsp-agent` (flat) | `.claude/agents/dsp-agent.md` | Original DSP agent — implements processBlock and DSP component files |
 | `validation-agent` (flat) | `.claude/agents/validation-agent.md` | Original validation agent — verifies VST3 artifact, parameter coverage, real-time safety |
 
+## Studio Identity
+
+File: `D:\Dev\PluginSkeleton\studio-identity.md`
+Studio: Orient Plugins
+Palette: 5 neutrals + 1 accent (#5B7BF8)
+Style: clean minimal modern playful single-accent cool-grey
+Logo GUI: `assets\logo_white_80.png` → copied to each plugin `Source\Assets\` by ui-designer-agent
+Rule: `studio-identity.md` is the single source of truth for all branding. No agent may hardcode colors, fonts, or logo paths.
+
 ## Agent Execution Order
 
 ### Primary pipeline (always run in order)

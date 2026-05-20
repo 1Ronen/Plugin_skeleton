@@ -432,7 +432,39 @@ Push a `plugin-request.md` from iPhone → GitHub repo via Shortcuts app → Git
 
 ---
 
-## 10. Prerequisite Checklist
+## 10. Studio Identity System
+
+### Single source of truth
+`D:\Dev\PluginSkeleton\studio-identity.md` controls all visual output across every plugin. No agent hardcodes colors, fonts, or logo paths.
+
+### Files
+`studio-identity.md`       → master brand file (edit here only)
+`assets\logo_white_80.png` → GUI logo (copied per plugin by ui-designer-agent)
+`assets\logo.ico`          → installer icon (used by installer-agent)
+
+### Palette — Orient Plugins
+Background primary:   #F8F9FB
+Background secondary: #ECEEF3
+Accent:               #5B7BF8
+Accent light:         #E8EBF5
+Text primary:         #1C2035
+Text secondary:       #8C94AD
+Border:               #D8DCE8
+
+### Updating branding across all plugins
+If studio-identity.md changes (new palette, new logo):
+  Run: `"Apply identity to [PluginName]"`
+  Uses: `/apply-identity` skill
+  Recompiles and re-runs pluginval automatically
+
+### Per-plugin overrides
+Add "UI Notes" section to `.ideas/creative-brief.md`
+Overrides apply to that plugin only.
+`studio-identity.md` defaults apply to everything else.
+
+---
+
+## 11. Prerequisite Checklist
 
 | Tool | Location / Command | Required For |
 |---|---|---|
@@ -448,7 +480,7 @@ Push a `plugin-request.md` from iPhone → GitHub repo via Shortcuts app → Git
 
 ---
 
-## 11. Rules
+## 12. Rules
 
 1. Always run `new-plugin` skill first — never build directly in `D:\Dev\PluginSkeleton\`
 2. Never modify `.ideas/` contracts after implementation starts — changes require a new version cycle
@@ -463,7 +495,7 @@ Push a `plugin-request.md` from iPhone → GitHub repo via Shortcuts app → Git
 
 ---
 
-## 12. Skills Reference
+## 13. Skills Reference
 
 Skills are lightweight orchestrators invoked directly in the Claude Code prompt. They are not agents — they do not build or analyse code on their own. They read files, delegate to agents, and report results.
 
@@ -508,7 +540,7 @@ Start new version 1.1.0 of [PluginName].
 
 ---
 
-## 13. New Plugin Quickstart
+## 14. New Plugin Quickstart
 
 ```
 From iPhone (SSH) or PC terminal:

@@ -43,6 +43,8 @@ Contents:
 - UX principles: how the plugin should feel to use
 - Use cases (2–3 concrete production scenarios)
 - Out-of-scope for v1 (prevents scope creep)
+- UI Notes: plugin-specific aesthetic overrides to studio-identity.md defaults.
+  If none, write: "No overrides — use studio-identity.md defaults"
 
 ### 4. Write `.ideas/parameter-spec.md`
 One entry per confirmed parameter:

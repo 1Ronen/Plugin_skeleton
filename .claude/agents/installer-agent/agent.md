@@ -21,7 +21,8 @@ Does not modify plugin source. Does not run before pluginval passes.
 
 ## Reads From
 
-- `plugins/[ActivePlugin]/.ideas/creative-brief.md` - product name, vendor, version
+- `D:\Dev\PluginSkeleton\studio-identity.md` - Studio Name (VENDOR), icon path
+- `plugins/[ActivePlugin]/.ideas/creative-brief.md` - product name, version
 - `plugins/[ActivePlugin]/.ideas/parameter-spec.md` - plugin type (synth / FX)
 - `build/plugins/[ActivePlugin]/[ActivePlugin]_artefacts/Release/VST3/` - compiled binary
 - `.claude/CLAUDE.md` - active plugin name
@@ -66,9 +67,12 @@ Then stop. Do not attempt a workaround.
 
 ### 2. Read contracts
 
+From `D:\Dev\PluginSkeleton\studio-identity.md` extract:
+- `StudioName` - Studio Name field (e.g. `Orient Plugins`); used as VENDOR in all installer text, install path, and Add/Remove Programs entry
+- `IconPath` - Icon field (e.g. `D:\Dev\PluginSkeleton\assets\logo.ico`); used for MUI_ICON and MUI_UNICON
+
 From `plugins/[ActivePlugin]/.ideas/creative-brief.md` extract:
 - `ProductName` - display name with spaces (e.g. `Simple Delay`)
-- `Vendor` - company/studio name (e.g. `YourStudio`)
 - `Version` - version string (e.g. `1.0.0`); default to `1.0.0` if absent, log warning
 - `PluginType` - `synth` or `fx`
 
@@ -109,7 +113,7 @@ Replace all tokens before writing:
 |-------|-------|
 | `PRODUCT_NAME` | ProductName from brief (e.g. `Simple Delay`) |
 | `ACTIVE_PLUGIN` | CamelCase plugin ID (e.g. `SimpleDelay`) |
-| `VENDOR` | Vendor from brief |
+| `VENDOR` | Studio Name from studio-identity.md |
 | `VERSION` | Version from brief |
 | `VST3_SOURCE_PATH` | Absolute Windows path to the .vst3 bundle directory |
 
@@ -130,6 +134,8 @@ RequestExecutionLevel admin
 BrandingText "VENDOR  -  PRODUCT_NAME vVERSION"
 
 !define MUI_ABORTWARNING
+!define MUI_ICON   "D:\Dev\PluginSkeleton\assets\logo.ico"
+!define MUI_UNICON "D:\Dev\PluginSkeleton\assets\logo.ico"
 !define MUI_WELCOMEPAGE_TITLE "Install PRODUCT_NAME vVERSION"
 !define MUI_WELCOMEPAGE_TEXT  "Installs PRODUCT_NAME vVERSION by VENDOR.$\n$\n\
                                 VST3 destination: $COMMONFILES\VST3\VENDOR\"
