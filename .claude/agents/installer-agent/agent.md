@@ -107,6 +107,28 @@ Use `ProductName` and `Vendor` values from the brief in the text body.
 
 Write `plugins/[ActivePlugin]/installer/[ActivePlugin].nsi`.
 
+**Directory selection page (mandatory):**
+- Always include `MUI_PAGE_DIRECTORY` — every installer must let the user choose the install path
+- Default install path: `$COMMONFILES64\VST3\VENDOR` (resolves to `C:\Program Files\Common Files\VST3\[StudioName]\`)
+- Use `$COMMONFILES64` not `$COMMONFILES` — the latter resolves to the x86 path on 64-bit Windows
+- Set directory page title and description using these defines immediately before `!insertmacro MUI_PAGE_DIRECTORY`, then undef them after:
+  ```nsis
+  !define MUI_PAGE_HEADER_TEXT    "Choose Install Location"
+  !define MUI_PAGE_HEADER_SUBTEXT "Choose where PRODUCT_NAME VST3 will be installed"
+  !define MUI_DIRECTORYPAGE_TEXT_TOP \
+      "Install to your DAW's VST3 scan folder.$\nThe default location is recognized by most DAWs automatically."
+  !insertmacro MUI_PAGE_DIRECTORY
+  !undef MUI_PAGE_HEADER_TEXT
+  !undef MUI_PAGE_HEADER_SUBTEXT
+  !undef MUI_DIRECTORYPAGE_TEXT_TOP
+  ```
+- Page order must always be: Welcome → License → Directory → Install → Finish
+
+**Uninstaller must use `$INSTDIR` — never hardcode paths:**
+- The user may change the install directory; hardcoding the uninstall path causes broken uninstalls
+- All `RMDir`, `Delete`, `WriteUninstaller`, and registry `UninstallString` / `InstallLocation` values must reference `$INSTDIR`
+- `SetOutPath "$INSTDIR"` in the install section (not `$COMMONFILES64\VST3\VENDOR`)
+
 Replace all tokens before writing:
 
 | Token | Value |
@@ -128,7 +150,7 @@ Unicode True
 
 Name             "PRODUCT_NAME"
 OutFile          "ACTIVE_PLUGIN_Setup.exe"
-InstallDir       "$COMMONFILES\VST3\VENDOR"
+InstallDir       "$COMMONFILES64\VST3\VENDOR"
 InstallDirRegKey HKLM "Software\VENDOR\PRODUCT_NAME" "InstallDir"
 RequestExecutionLevel admin
 BrandingText "VENDOR  -  PRODUCT_NAME vVERSION"
@@ -142,7 +164,13 @@ BrandingText "VENDOR  -  PRODUCT_NAME vVERSION"
 
 !insertmacro MUI_PAGE_WELCOME
 !insertmacro MUI_PAGE_LICENSE "eula.txt"
+
+!define MUI_PAGE_HEADER_TEXT    "Choose Install Location"
+!define MUI_PAGE_HEADER_SUBTEXT "Choose where PRODUCT_NAME VST3 will be installed"
+!define MUI_DIRECTORYPAGE_TEXT_TOP \
+    "Install to your DAW's VST3 scan folder.$\nThe default location is recognized by most DAWs automatically."
 !insertmacro MUI_PAGE_DIRECTORY
+
 !insertmacro MUI_PAGE_INSTFILES
 
 !define MUI_FINISHPAGE_TITLE "Installation Complete"
@@ -165,9 +193,9 @@ VIAddVersionKey /LANG=${LANG_ENGLISH} "LegalCopyright"  "Copyright VENDOR"
 
 Section "VST3 Plugin" SEC_VST3
     SectionIn RO
-    SetOutPath "$COMMONFILES\VST3\VENDOR"
+    SetOutPath "$INSTDIR"
     File /r "VST3_SOURCE_PATH\PRODUCT_NAME.vst3"
-    WriteUninstaller "$COMMONFILES\VST3\VENDOR\Uninstall PRODUCT_NAME.exe"
+    WriteUninstaller "$INSTDIR\Uninstall PRODUCT_NAME.exe"
     WriteRegStr   HKLM "Software\Microsoft\Windows\CurrentVersion\Uninstall\VENDOR_ACTIVE_PLUGIN" \
                        "DisplayName"     "PRODUCT_NAME"
     WriteRegStr   HKLM "Software\Microsoft\Windows\CurrentVersion\Uninstall\VENDOR_ACTIVE_PLUGIN" \
@@ -175,9 +203,9 @@ Section "VST3 Plugin" SEC_VST3
     WriteRegStr   HKLM "Software\Microsoft\Windows\CurrentVersion\Uninstall\VENDOR_ACTIVE_PLUGIN" \
                        "Publisher"       "VENDOR"
     WriteRegStr   HKLM "Software\Microsoft\Windows\CurrentVersion\Uninstall\VENDOR_ACTIVE_PLUGIN" \
-                       "UninstallString" "$COMMONFILES\VST3\VENDOR\Uninstall PRODUCT_NAME.exe"
+                       "UninstallString" "$INSTDIR\Uninstall PRODUCT_NAME.exe"
     WriteRegStr   HKLM "Software\Microsoft\Windows\CurrentVersion\Uninstall\VENDOR_ACTIVE_PLUGIN" \
-                       "InstallLocation" "$COMMONFILES\VST3\VENDOR"
+                       "InstallLocation" "$INSTDIR"
     WriteRegDWORD HKLM "Software\Microsoft\Windows\CurrentVersion\Uninstall\VENDOR_ACTIVE_PLUGIN" \
                        "NoModify" 1
     WriteRegDWORD HKLM "Software\Microsoft\Windows\CurrentVersion\Uninstall\VENDOR_ACTIVE_PLUGIN" \
@@ -194,10 +222,13 @@ Section /o "Start Menu Shortcut" SEC_STARTMENU
                    "$COMMONFILES\VST3\VENDOR\Uninstall PRODUCT_NAME.exe"
 SectionEnd
 Section "Uninstall"
-    ; Recursively remove the VST3 bundle directory
-    ; Recursively remove the Start Menu folder
-    ; Delete the uninstaller exe
-    ; Delete registry keys for Add/Remove Programs and VENDOR\PRODUCT_NAME
+    RMDir /r "$INSTDIR\PRODUCT_NAME.vst3"
+    Delete "$INSTDIR\Uninstall PRODUCT_NAME.exe"
+    RMDir "$INSTDIR"
+    Delete "$SMPROGRAMS\VENDOR\Uninstall PRODUCT_NAME.lnk"
+    RMDir "$SMPROGRAMS\VENDOR"
+    DeleteRegKey HKLM "Software\Microsoft\Windows\CurrentVersion\Uninstall\VENDOR_ACTIVE_PLUGIN"
+    DeleteRegKey HKLM "Software\VENDOR\PRODUCT_NAME"
 SectionEnd
 ```
 
@@ -298,7 +329,9 @@ To install locally: run the .exe as administrator.
 - VST3 format only - never reference VST2, AAX, or AU
 - Never overwrite an existing installer without explicit user confirmation
 - Version must come from `creative-brief.md` - never hardcoded
-- NSIS install path must use vendor subfolder: `$COMMONFILES\VST3\VENDOR\` not `$COMMONFILES\VST3\`
+- NSIS install path must use `$COMMONFILES64\VST3\VENDOR\` — never `$COMMONFILES\VST3\` (resolves to x86 path)
+- MUI_PAGE_DIRECTORY is mandatory — page order: Welcome → License → Directory → Install → Finish
+- Uninstaller must always use `$INSTDIR` — never hardcode removal path
 - If NSIS is missing: stop and print download instructions, do not attempt a workaround
 - Never run before pluginval passes at strictness 10
 

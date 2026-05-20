@@ -268,6 +268,89 @@ The 4-character `PLUGIN_CODE` must be unique across all plugins. Collisions caus
 
 ---
 
+## NSIS Installer Patterns
+
+### Installer directory selection (mandatory)
+
+Always include `MUI_PAGE_DIRECTORY` — users must be able to change the install path.
+
+```nsis
+; Set directory page text immediately before the macro, undef after
+!define MUI_PAGE_HEADER_TEXT    "Choose Install Location"
+!define MUI_PAGE_HEADER_SUBTEXT "Choose where PRODUCT_NAME VST3 will be installed"
+!define MUI_DIRECTORYPAGE_TEXT_TOP \
+    "Install to your DAW's VST3 scan folder.$\nThe default location is recognized by most DAWs automatically."
+!insertmacro MUI_PAGE_DIRECTORY
+; Note: MUI2 consumes and cleans up MUI_PAGE_HEADER_* and MUI_DIRECTORYPAGE_* defines
+; internally — do not !undef them, it causes "not defined" warnings
+```
+
+Page order must always be: `Welcome → License → Directory → Install → Finish`
+
+### Default install path — use $COMMONFILES64
+
+`$COMMONFILES` on 64-bit Windows resolves to `C:\Program Files (x86)\Common Files` (the WOW64 path).
+VST3 plugins must go to `C:\Program Files\Common Files\VST3\` which requires `$COMMONFILES64`.
+
+```nsis
+; CORRECT
+InstallDir "$COMMONFILES64\VST3\Orient Plugins"
+
+; WRONG — installs to x86 path, DAWs won't scan it
+InstallDir "$COMMONFILES\VST3\Orient Plugins"
+```
+
+### Uninstaller must use $INSTDIR
+
+The user may change the install directory on the Directory page. Hardcoding the removal path
+causes broken uninstalls when the user chose a non-default location.
+
+```nsis
+; CORRECT — follows user-selected path
+Section "VST3 Plugin" SEC_VST3
+    SetOutPath "$INSTDIR"
+    File /r "path\to\Plugin.vst3"
+    WriteUninstaller "$INSTDIR\Uninstall Plugin.exe"
+    WriteRegStr HKLM "...\Uninstall\..." "UninstallString" "$INSTDIR\Uninstall Plugin.exe"
+    WriteRegStr HKLM "...\Uninstall\..." "InstallLocation" "$INSTDIR"
+SectionEnd
+
+Section "Uninstall"
+    RMDir /r "$INSTDIR\Plugin.vst3"
+    Delete   "$INSTDIR\Uninstall Plugin.exe"
+    RMDir    "$INSTDIR"
+    DeleteRegKey HKLM "...\Uninstall\..."
+SectionEnd
+
+; WRONG — breaks if user changed directory
+WriteUninstaller "$COMMONFILES64\VST3\Orient Plugins\Uninstall Plugin.exe"
+RMDir /r "$COMMONFILES64\VST3\Orient Plugins\Plugin.vst3"
+```
+
+### VST3 is a directory, not a file
+
+On Windows the `.vst3` artefact is a folder (bundle). Use `File /r` to copy it recursively.
+
+```nsis
+; CORRECT
+File /r "build\...\Release\VST3\Plugin.vst3"
+
+; WRONG — File without /r silently copies nothing for a directory
+File "build\...\Release\VST3\Plugin.vst3"
+```
+
+### Common NSIS mistakes
+
+| Mistake | Consequence | Fix |
+|---------|-------------|-----|
+| `$COMMONFILES` instead of `$COMMONFILES64` | Installs to x86 path, DAW won't find plugin | Use `$COMMONFILES64` |
+| Hardcoded path in `Section "Uninstall"` | Broken uninstall if user changed directory | Use `$INSTDIR` everywhere |
+| Missing `MUI_PAGE_DIRECTORY` | User cannot change install path | Add between License and Install pages |
+| `File` without `/r` for VST3 bundle | Plugin bundle not copied | Use `File /r` |
+| `!undef` missing after page defines | Header text bleeds into next page | Always undef after each page macro |
+
+---
+
 ## Studio Branding Patterns
 
 ### LookAndFeel setup
