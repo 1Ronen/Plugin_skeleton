@@ -77,28 +77,53 @@ Any match = flag as error.
 | 6 | Real-time safety | PASS / FAIL | list any violations |
 
 ### 8. On any FAIL: invoke debug-agent
-Pass to debug-agent:
+Write `qa-report.md` with `Status: FAIL` first, then pass to debug-agent:
 - Which check failed
 - Exact error text (pluginval output or grep match)
 - File and line if applicable
 
 Do not attempt fixes in this agent — that is debug-agent's role.
+Do NOT trigger backup skill on a FAIL — without exception.
 
 ### 9. On all checks PASS
+Write `qa-report.md` with `Status: PASS`, then automatically trigger backup skill.
+
 ```
 qa-tester complete
 Plugin: [PluginName]
 All checks: PASS
 pluginval: [N]/[N] tests passed
 Log: troubleshooting\pluginval-[PluginName]-[YYYYMMDD].log
-Next agent: refactor-agent (optional) | DONE
+Triggering backup skill...
 ```
+
+### 10. Backup trigger (PASS only)
+Invoke backup skill with context:
+- PluginName
+- Version (from `creative-brief.md`)
+- Today's date
+
+Backup skill will push both repos using commit message:
+```
+qa-pass: [PluginName] v[version] — [YYYY-MM-DD]
+```
+
+## Gate OUT
+- `qa-report.md` written with `Status: PASS` or `Status: FAIL` as first field
+- If PASS: backup skill triggered automatically
+  - version-check runs inside backup — compares `creative-brief.md` vs `installer-version.txt`
+  - If version changed: installer-agent builds new installer, `installer-version.txt` updated, then push
+  - If version unchanged: source push only, no installer built
+  - Both `D:\Dev\Plugins\` and `D:\Dev\PluginSkeleton\` repos pushed
+- If FAIL: debug-agent invoked, no git push under any circumstances
 
 ## Constraints
 - No source code changes.
 - Validation only — read and report.
 - pluginval must pass at strictness 10 with zero failures before the plugin is marked complete.
 - If pluginval is not available, mark those rows as SKIPPED with a warning — do not block the other checks.
+- Never trigger backup skill or push to git unless ALL checks are PASS.
+- `qa-report.md` must be written before backup skill is triggered.
 
 ## Output Format
 Structured validation table (all 6 checks, result, notes).

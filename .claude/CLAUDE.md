@@ -195,6 +195,7 @@ Read that file before implementing any agent step. Key rules:
 | `resume` | `.claude/skills/resume/SKILL.md` | `"Resume"` or `"/resume"` | Reads last completed gate and activates the correct next agent automatically |
 | `version-bump` | `.claude/skills/version-bump/SKILL.md` | `"Bump version to [x.x.x]"` | Updates version string in `creative-brief.md` and `CMakeLists.txt` |
 | `new-version` | `.claude/skills/new-version/SKILL.md` | `"Start new version [x.x.x] of [PluginName]"` | Archives current `.ideas/` to `versions/v[N]/`, resets pipeline to planning with v[N] as baseline |
+| `backup` | `.claude/skills/backup/skill.md` | `"backup"` or `"/backup"` | Reads `qa-report.md`, blocks on FAIL/missing, pushes both Plugins and Skeleton repos with versioned commit message |
 
 ## Troubleshooting Knowledge Base
 
@@ -209,3 +210,22 @@ build\plugins\[PluginName]\[PluginName]_artefacts\Release\VST3\[ProductName].vst
 ```
 
 Install to DAW: copy `.vst3` directory to `C:\Program Files\Common Files\VST3\`
+
+## Git
+
+| Repo | Local path | Remote |
+|---|---|---|
+| Plugins | `D:\Dev\Plugins\` | `github.com/1Ronen/my-plugins` |
+| Skeleton | `D:\Dev\PluginSkeleton\` | `github.com/1Ronen/plugin-skeleton` |
+
+Backup skill pushes both repos on every run.
+
+### Git push policy
+
+- **NEVER push manually during active plugin build** — only push via backup skill
+- **backup skill reads `qa-report.md` before every push** — Status must be `PASS`
+- **`Status: FAIL` or missing file blocks the push entirely** — no exceptions
+- Commit message always includes plugin name + version + date:
+  `qa-pass: [PluginName] v[version] — [YYYY-MM-DD]`
+- Pattern: `qa-tester PASS → auto-trigger backup → push both repos`
+- Both repos (Plugins + Skeleton) are always pushed together in one backup run

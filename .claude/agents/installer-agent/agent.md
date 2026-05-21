@@ -80,16 +80,23 @@ From `plugins/[ActivePlugin]/.ideas/parameter-spec.md` confirm plugin type if no
 
 ### 3. Create installer directory
 
+Always build into a versioned subfolder — never into the root `installer/` directory:
+
 ```powershell
-New-Item -ItemType Directory -Path "plugins\$ActivePlugin\installer" -Force | Out-Null
+$versionedDir = "plugins\$ActivePlugin\installer\v$Version"
+New-Item -ItemType Directory -Path $versionedDir -Force | Out-Null
 ```
 
-If `[ActivePlugin]_Setup.exe` already exists, stop and ask:
+Filename format: `[PluginName]_Setup_v[X.X.X].exe` — the version number is always in the filename.
+
+Previous version subfolders are never deleted. Every version is kept permanently for rollback.
+
+If `[PluginName]_Setup_v[Version].exe` already exists in the versioned subfolder, stop and report:
 
 ```
-installer-agent: [ActivePlugin]_Setup.exe already exists.
-  Path: plugins\[ActivePlugin]\installer\[ActivePlugin]_Setup.exe
-  Overwrite? Confirm before proceeding.
+installer-agent: [ActivePlugin]_Setup_v[Version].exe already exists.
+  Path: plugins\[ActivePlugin]\installer\v[Version]\[ActivePlugin]_Setup_v[Version].exe
+  Cannot overwrite. Bump the version or remove the file manually before retrying.
 ```
 
 ### 4. Generate EULA
@@ -105,7 +112,7 @@ Use `ProductName` and `Vendor` values from the brief in the text body.
 
 ### 5. Generate NSIS script
 
-Write `plugins/[ActivePlugin]/installer/[ActivePlugin].nsi`.
+Write `plugins/[ActivePlugin]/installer/v[Version]/[ActivePlugin]_v[Version].nsi`.
 
 **Directory selection page (mandatory):**
 - Always include `MUI_PAGE_DIRECTORY` — every installer must let the user choose the install path
@@ -149,7 +156,7 @@ Unicode True
 !include "LogicLib.nsh"
 
 Name             "PRODUCT_NAME"
-OutFile          "ACTIVE_PLUGIN_Setup.exe"
+OutFile          "ACTIVE_PLUGIN_Setup_vVERSION.exe"
 InstallDir       "$COMMONFILES64\VST3\VENDOR"
 InstallDirRegKey HKLM "Software\VENDOR\PRODUCT_NAME" "InstallDir"
 RequestExecutionLevel admin
@@ -327,7 +334,10 @@ To install locally: run the .exe as administrator.
 
 - Windows only - no macOS pkg, no cross-platform installer targets
 - VST3 format only - never reference VST2, AAX, or AU
-- Never overwrite an existing installer without explicit user confirmation
+- Always build into `installer\v[Version]\` — never into the root `installer\` directory
+- OutFile must include the version number: `[PluginName]_Setup_v[X.X.X].exe`
+- Never overwrite an existing versioned installer — bump the version or stop
+- Previous version subfolders are never deleted — all versions kept permanently for rollback
 - Version must come from `creative-brief.md` - never hardcoded
 - NSIS install path must use `$COMMONFILES64\VST3\VENDOR\` — never `$COMMONFILES\VST3\` (resolves to x86 path)
 - MUI_PAGE_DIRECTORY is mandatory — page order: Welcome → License → Directory → Install → Finish

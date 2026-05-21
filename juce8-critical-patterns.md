@@ -339,6 +339,29 @@ File /r "build\...\Release\VST3\Plugin.vst3"
 File "build\...\Release\VST3\Plugin.vst3"
 ```
 
+### Installer version control
+
+Always build into a versioned subfolder — never into the root `installer/` directory:
+
+```
+installer\
+  v1.0.0\
+    AtmoKick_Setup_v1.0.0.exe
+    AtmoKick_v1.0.0.nsi
+    eula.txt
+    install-log-v1.0.0.md
+  v1.1.0\
+    AtmoKick_Setup_v1.1.0.exe
+    AtmoKick_v1.1.0.nsi
+    eula.txt
+    install-log-v1.1.0.md
+```
+
+- **Filename format**: `[PluginName]_Setup_v[X.X.X].exe` — version always in filename
+- **OutFile in .nsi**: `OutFile "PluginName_Setup_vX.X.X.exe"` — never bare `PluginName_Setup.exe`
+- **Old versions kept permanently** — never delete previous subfolders; rollback capability requires all versions present
+- **Never overwrite** — if `v[Version]\PluginName_Setup_v[Version].exe` already exists, stop and ask user to bump version
+
 ### Common NSIS mistakes
 
 | Mistake | Consequence | Fix |
@@ -348,6 +371,8 @@ File "build\...\Release\VST3\Plugin.vst3"
 | Missing `MUI_PAGE_DIRECTORY` | User cannot change install path | Add between License and Install pages |
 | `File` without `/r` for VST3 bundle | Plugin bundle not copied | Use `File /r` |
 | `!undef` missing after page defines | Header text bleeds into next page | Always undef after each page macro |
+| Installer built into root `installer/` | Overwrites previous version, no rollback | Always use `installer\v[X.X.X]\` subfolder |
+| Version absent from OutFile name | Can't distinguish versions on disk | Always include version in filename |
 
 ---
 
@@ -383,3 +408,33 @@ File "build\...\Release\VST3\Plugin.vst3"
 - Using `ImageCache::getFromFile` with relative path → not found in DAW context
 - Drawing logo before background is painted → logo gets overdrawn
 - Hardcoding colors instead of reading from LookAndFeel → breaks identity system
+- **Slider textbox colours must be set directly on each `Slider` instance** — `LookAndFeel` alone does not override them. Call `slider.setColour(Slider::textBoxTextColourId, ...)` etc. inside `setupKnob()` immediately after construction, for every slider.
+- **Logo path must use `File::getSpecialLocation(currentApplicationFile)` as base** — relative paths fail in DAW plugin context because the working directory is the DAW's, not the plugin's. Resolve `Assets/logo.png` relative to this file, then fall back to embedded `BinaryData` if the file is not found.
+- **Always add a `POST_BUILD` copy command in `CMakeLists.txt`** to copy the `Assets/` folder into the VST3 bundle alongside the DLL:
+  ```cmake
+  add_custom_command(TARGET MyPlugin POST_BUILD
+      COMMAND ${CMAKE_COMMAND} -E copy_directory
+      "${CMAKE_CURRENT_SOURCE_DIR}/Source/Assets"
+      "$<TARGET_FILE_DIR:MyPlugin>/Assets")
+  ```
+
+---
+
+## Git Push Policy
+
+- **All pushes go through backup skill only** — never run `git push` manually during active development
+- **backup skill reads `qa-report.md` before pushing** — the gate check is the first thing it does
+- **`qa-report.md` Status: PASS required** — no exceptions; FAIL or missing file blocks the push entirely
+- **Failed QA = blocked push = debug-agent fires first** — fix the failure, re-run qa-tester, then backup triggers automatically
+- Pattern: `qa-tester PASS → auto-trigger backup → version-check → push both repos`
+- Both repos (Plugins + Skeleton) always pushed together — never one without the other
+
+### Installer Build Gate
+
+- **Installer built ONLY when version number changes** — not on every QA pass
+- **Version tracked in `installer\installer-version.txt`** — one file per plugin, lives alongside the installer folders
+- **version-check skill** compares `creative-brief.md` current version vs `installer-version.txt` last built version
+- **Same version = source push only** — no installer built, commit message: `fix: [PluginName] v[version] — [date]`
+- **New version = installer built first, then pushed** — commit message: `release: [PluginName] v[version] — installer included`
+- **`installer-version.txt` updated only after installer Gate OUT confirmed** — never speculatively
+- Never build installer on every QA pass — repo size and commit noise
