@@ -60,7 +60,11 @@ private:
 ```cpp
 [id]Knob.setSliderStyle(juce::Slider::RotaryVerticalDrag);
 [id]Knob.setTextBoxStyle(juce::Slider::TextBoxBelow, false, 80, 20);
-[id]Knob.setColour(juce::Slider::textBoxOutlineColourId, juce::Colours::transparentBlack);
+// All 4 textbox colours MUST be set directly on the Slider — LookAndFeel alone does not propagate them
+[id]Knob.setColour(juce::Slider::textBoxTextColourId,       TEXT_PRI);
+[id]Knob.setColour(juce::Slider::textBoxBackgroundColourId, BG_SEC);
+[id]Knob.setColour(juce::Slider::textBoxOutlineColourId,    juce::Colours::transparentBlack);
+[id]Knob.setColour(juce::Slider::textBoxHighlightColourId,  ACCENT);
 addAndMakeVisible([id]Knob);
 
 [id]Label.setText("[DISPLAY NAME]", juce::dontSendNotification);
@@ -80,8 +84,30 @@ addAndMakeVisible([id]Label);
 ```cpp
 ~[PluginName]AudioProcessorEditor() override
 {
-    setLookAndFeel(nullptr);
+    setLookAndFeel(nullptr);  // MUST be first line — before any attachment teardown
 }
+```
+
+**Logo loading (in constructor, after setLookAndFeel):**
+```cpp
+juce::File pluginFile = juce::File::getSpecialLocation(
+    juce::File::SpecialLocationType::currentApplicationFile);
+juce::File logoFile = pluginFile.getParentDirectory()
+    .getChildFile("Assets").getChildFile("logo.png");
+if (logoFile.existsAsFile())
+    logoImage = juce::ImageCache::getFromFile(logoFile);
+if (!logoImage.isValid())
+    logoImage = juce::ImageCache::getFromMemory(BinaryData::logo_png, BinaryData::logo_pngSize);
+```
+
+**Logo draw in paint() — always guard with isValid():**
+```cpp
+if (logoImage.isValid())
+    g.drawImageWithin(logoImage, logoX, logoY, logoW, logoH,
+        juce::RectanglePlacement::centred | juce::RectanglePlacement::onlyReduceInSize);
+else
+    g.drawText("LOGO MISSING", juce::Rectangle<int>(logoX, logoY, logoW, logoH),
+        juce::Justification::centred, true);
 ```
 
 **paint():**
@@ -146,6 +172,9 @@ build\plugins\[PluginName]\[PluginName]_artefacts\Release\VST3\[ProductName].vst
 - Every parameter in parameter-spec.md must have a visible control with a working APVTS attachment.
 - Build must pass before this agent reports complete.
 - Never hardcode any color value — read all colors exclusively from ui-design-spec.md.
+- **Never set slider textbox colours only in LookAndFeel** — always call all 4 `setColour` overrides directly on each Slider instance (see Slider setup above).
+- **Never use relative or hardcoded logo file paths** — always resolve via `File::getSpecialLocation(currentApplicationFile)` with BinaryData fallback.
+- **Never omit `setLookAndFeel(nullptr)` from the destructor** — it must be the first statement; missing it causes a crash on plugin close in some DAWs.
 
 ## Output Format
 ```

@@ -47,6 +47,16 @@ plugins/[PluginName]/
 ### 2. Configure CMakeLists.txt
 Copy `D:\Dev\PluginSkeleton\template\CMakeLists.txt` and fill in:
 
+The **root** CMakeLists.txt (at the plugin repo root, not the plugin subdirectory) must use a
+configurable JUCE path — never hardcode `D:/HISE_Dev/JUCE`:
+
+```cmake
+if(NOT DEFINED JUCE_PATH)
+    set(JUCE_PATH "D:/HISE_Dev/JUCE")
+endif()
+add_subdirectory(${JUCE_PATH} JUCE)
+```
+
 ```cmake
 juce_add_plugin([PluginName]
     COMPANY_NAME             "YourStudio"
@@ -88,6 +98,17 @@ target_link_libraries([PluginName]
         juce::juce_recommended_warning_flags
 )
 juce_generate_juce_header([PluginName])  # MUST be after target_link_libraries
+```
+
+Always add POST_BUILD copy command for Assets after `juce_generate_juce_header`. Target must be
+`[PluginName]_VST3` (not `[PluginName]`, which is the SharedCode lib, not the DLL):
+
+```cmake
+add_custom_command(TARGET [PluginName]_VST3 POST_BUILD
+    COMMAND ${CMAKE_COMMAND} -E copy_directory
+    "${CMAKE_CURRENT_SOURCE_DIR}/Source/Assets"
+    "$<TARGET_FILE_DIR:[PluginName]_VST3>/Assets"
+    COMMENT "Copying Assets to VST3 bundle")
 ```
 
 Add DSP .cpp stubs to `target_sources` if architecture.md lists components.
@@ -156,9 +177,11 @@ For now: window size 400×300, dark background, plugin name text, no APVTS attac
 ```
 cmake -B build -G "Visual Studio 18 2026" -A x64
 ```
-(Run from `D:\Dev\PluginSkeleton\`)
+(Run from the plugin repo root — the directory containing the root CMakeLists.txt)
 
-Report the configure result verbatim. Pass = hand off. Fail = fix before reporting complete.
+Report the configure result verbatim. **CMake configure must produce `-- Build files have been written`
+with zero errors before this agent reports Stage 1 complete.** On any error: fix the root cause and
+re-run configure. Do not hand off to dsp-engineer until configure is clean.
 
 ### 8. Validate parameter coverage
 After writing PluginProcessor.cpp, scan it: every ID from parameter-spec.md must appear as `AudioParameterFloat|Bool|Choice("[id]"`. Report missing IDs and fix before handing off.
@@ -169,6 +192,9 @@ After writing PluginProcessor.cpp, scan it: every ID from parameter-spec.md must
 - CMake must configure successfully before this agent reports complete.
 - Do not change parameter IDs from parameter-spec.md — they are final.
 - `juce_generate_juce_header` must appear after `target_link_libraries`.
+- Root CMakeLists.txt must use configurable `JUCE_PATH` — never hardcode `D:/HISE_Dev/JUCE`.
+- Always add POST_BUILD assets copy targeting `[PluginName]_VST3` (not `[PluginName]`).
+- After adding POST_BUILD for the first time, always reconfigure CMake before building.
 
 ## Output Format
 ```

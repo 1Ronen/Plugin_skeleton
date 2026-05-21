@@ -37,6 +37,20 @@ target_compile_definitions(MyPlugin PUBLIC
 )
 ```
 
+### Configurable JUCE path
+
+Never hardcode the JUCE path. Use a cache variable with a local fallback so CI and
+other machines can override without editing the file:
+
+```cmake
+if(NOT DEFINED JUCE_PATH)
+    set(JUCE_PATH "D:/HISE_Dev/JUCE")
+endif()
+add_subdirectory(${JUCE_PATH} JUCE)
+```
+
+On CI, pass the override: `cmake -B build -DJUCE_PATH=/path/to/JUCE ...`
+
 ### MSVC runtime library
 
 Set in root CMakeLists.txt **before** `add_subdirectory(JUCE)`:
@@ -403,6 +417,39 @@ installer\
   rounded cap, rotated by normalised value mapped to -135° to +135°
 - Value label: drawn below knob rect, centered, Text primary, 10px bold
 
+### Slider textbox colours — all 4, directly on each Slider
+
+LookAndFeel ColourId overrides do **not** propagate to Slider textboxes. Set them directly
+on every Slider instance, typically inside a `setupKnob()` helper:
+
+```cpp
+knob.setColour(juce::Slider::textBoxTextColourId,       juce::Colour(0xff1C2035));
+knob.setColour(juce::Slider::textBoxBackgroundColourId, juce::Colour(0xffECEEF3));
+knob.setColour(juce::Slider::textBoxOutlineColourId,    juce::Colours::transparentBlack);
+knob.setColour(juce::Slider::textBoxHighlightColourId,  juce::Colour(0xff5B7BF8));
+```
+
+### TextEditor edit-state colours
+
+When the user clicks a slider value to type a new one, JUCE activates an inline
+`TextEditor`. Without these LookAndFeel overrides the edit box uses default colours
+(white background, black text) — visible as a jarring flash on branded dark UIs.
+
+Set all of these in the LookAndFeel constructor:
+
+```cpp
+setColour(juce::Label::textWhenEditingColourId,        juce::Colour(0xff1C2035));
+setColour(juce::Label::backgroundWhenEditingColourId,  juce::Colour(0xffECEEF3));
+setColour(juce::Label::outlineWhenEditingColourId,     juce::Colour(0xff5B7BF8));
+setColour(juce::TextEditor::backgroundColourId,        juce::Colour(0xffECEEF3));
+setColour(juce::TextEditor::textColourId,              juce::Colour(0xff1C2035));
+setColour(juce::TextEditor::outlineColourId,           juce::Colour(0xff5B7BF8));
+setColour(juce::CaretComponent::caretColourId,         juce::Colour(0xff5B7BF8));
+```
+
+Note: use `juce::CaretComponent::caretColourId` — `juce::TextEditor::caretColourId` does
+not exist in JUCE 8 and causes a C2039 compile error.
+
 ### Common branding mistakes
 - Forgetting `setLookAndFeel(nullptr)` in destructor → crash on plugin close
 - Using `ImageCache::getFromFile` with relative path → not found in DAW context
@@ -410,13 +457,15 @@ installer\
 - Hardcoding colors instead of reading from LookAndFeel → breaks identity system
 - **Slider textbox colours must be set directly on each `Slider` instance** — `LookAndFeel` alone does not override them. Call `slider.setColour(Slider::textBoxTextColourId, ...)` etc. inside `setupKnob()` immediately after construction, for every slider.
 - **Logo path must use `File::getSpecialLocation(currentApplicationFile)` as base** — relative paths fail in DAW plugin context because the working directory is the DAW's, not the plugin's. Resolve `Assets/logo.png` relative to this file, then fall back to embedded `BinaryData` if the file is not found.
-- **Always add a `POST_BUILD` copy command in `CMakeLists.txt`** to copy the `Assets/` folder into the VST3 bundle alongside the DLL:
+- **Always add a `POST_BUILD` copy command in `CMakeLists.txt`** to copy the `Assets/` folder into the VST3 bundle alongside the DLL. Target must be `[PluginName]_VST3`, not `[PluginName]` (the latter is SharedCode.lib, not the DLL):
   ```cmake
-  add_custom_command(TARGET MyPlugin POST_BUILD
+  add_custom_command(TARGET MyPlugin_VST3 POST_BUILD
       COMMAND ${CMAKE_COMMAND} -E copy_directory
       "${CMAKE_CURRENT_SOURCE_DIR}/Source/Assets"
-      "$<TARGET_FILE_DIR:MyPlugin>/Assets")
+      "$<TARGET_FILE_DIR:MyPlugin_VST3>/Assets")
   ```
+- **POST_BUILD doesn't activate on first add** — after adding `add_custom_command` to CMakeLists.txt, always run `cmake -B build ...` (reconfigure) before rebuilding, otherwise the new command is not picked up.
+- **`setLookAndFeel(nullptr)` must be the first line of the destructor** — not after attachment teardown. Order matters; skipping causes crash on plugin close in some DAWs.
 
 ---
 

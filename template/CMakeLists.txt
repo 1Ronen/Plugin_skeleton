@@ -44,3 +44,9 @@ target_link_libraries([PluginName]
 )
 
 juce_generate_juce_header([PluginName])
+
+add_custom_command(TARGET [PluginName]_VST3 POST_BUILD
+    COMMAND ${CMAKE_COMMAND} -E copy_directory
+    "${CMAKE_CURRENT_SOURCE_DIR}/Source/Assets"
+    "$<TARGET_FILE_DIR:[PluginName]_VST3>/Assets"
+    COMMENT "Copying Assets to VST3 bundle")
