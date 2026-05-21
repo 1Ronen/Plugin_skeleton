@@ -376,6 +376,30 @@ installer\
 - **Old versions kept permanently** — never delete previous subfolders; rollback capability requires all versions present
 - **Never overwrite** — if `v[Version]\PluginName_Setup_v[Version].exe` already exists, stop and ask user to bump version
 
+### NSIS icon and path rules
+
+Icons and support files must use relative paths so the script works on both local machines
+and CI runners. NSIS resolves all relative paths from the **current working directory** when
+`makensis.exe` is invoked — not from the `.nsi` file's own directory.
+
+- **Always copy `logo.ico` into `installer\`** alongside the versioned subfolders. Never
+  reference the PluginSkeleton assets path directly in any `.nsi` file.
+- **Icon pattern** (resolves when makensis is run from the versioned subfolder):
+  ```nsis
+  !define MUI_ICON   "..\logo.ico"
+  !define MUI_UNICON "..\logo.ico"
+  ```
+- **Run makensis from the versioned dir** — not from repo root:
+  ```powershell
+  Push-Location "installer\v$ver"
+  & makensis.exe "PluginName_v$ver.nsi"
+  Pop-Location
+  ```
+  If run from repo root, `"..\logo.ico"` resolves one level above the repo, not to `installer\`.
+- **EULA and README path convention**: EULA lives in the versioned subfolder (`"eula.txt"`),
+  README lives in `installer\` (`"..\README.txt"`). Both resolve correctly when makensis runs
+  from the versioned dir.
+
 ### Common NSIS mistakes
 
 | Mistake | Consequence | Fix |
@@ -387,6 +411,8 @@ installer\
 | `!undef` missing after page defines | Header text bleeds into next page | Always undef after each page macro |
 | Installer built into root `installer/` | Overwrites previous version, no rollback | Always use `installer\v[X.X.X]\` subfolder |
 | Version absent from OutFile name | Can't distinguish versions on disk | Always include version in filename |
+| Absolute icon path (`D:\Dev\...`) | Compile fails on CI runner | Use `"..\logo.ico"` with `logo.ico` in `installer\` |
+| Running `makensis.exe` from repo root | Relative paths resolve wrong, compile fails | Run from versioned subfolder with `Push-Location` |
 
 ---
 

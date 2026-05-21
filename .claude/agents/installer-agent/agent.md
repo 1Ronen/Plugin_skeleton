@@ -163,8 +163,8 @@ RequestExecutionLevel admin
 BrandingText "VENDOR  -  PRODUCT_NAME vVERSION"
 
 !define MUI_ABORTWARNING
-!define MUI_ICON   "D:\Dev\PluginSkeleton\assets\logo.ico"
-!define MUI_UNICON "D:\Dev\PluginSkeleton\assets\logo.ico"
+!define MUI_ICON   "..\logo.ico"
+!define MUI_UNICON "..\logo.ico"
 !define MUI_WELCOMEPAGE_TITLE "Install PRODUCT_NAME vVERSION"
 !define MUI_WELCOMEPAGE_TEXT  "Installs PRODUCT_NAME vVERSION by VENDOR.$\n$\n\
                                 VST3 destination: $COMMONFILES\VST3\VENDOR\"
@@ -344,6 +344,10 @@ To install locally: run the .exe as administrator.
 - Uninstaller must always use `$INSTDIR` — never hardcode removal path
 - If NSIS is missing: stop and print download instructions, do not attempt a workaround
 - Never run before pluginval passes at strictness 10
+- **Copy `logo.ico` from the path in `studio-identity.md` into `installer\logo.ico`** before generating the NSIS script — never reference the PluginSkeleton assets path directly
+- **All NSIS file paths must be relative** — absolute local paths (e.g. `D:\Dev\PluginSkeleton\...`) fail on CI runners
+- **Icon path in NSIS**: `"..\logo.ico"` (relative to the versioned `.nsi` file, resolved from the `installer\` parent)
+- **Run `makensis.exe` from the versioned subfolder** (`Push-Location installer\v[Version]`), not from repo root — NSIS resolves relative paths from CWD, not from the `.nsi` file location
 
 ## Output Format
 
