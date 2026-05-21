@@ -193,7 +193,26 @@ Create `$dst\.ideas\` and write four empty contract files:
 <!-- List DSP members in init order -- all must appear BEFORE apvts -->
 ```
 
-### 6. Update .claude/CLAUDE.md Active Plugin section
+### 6. Copy CHECKLIST.md
+
+Copy `D:\Dev\PluginSkeleton\template\CHECKLIST.md` to `$dst\CHECKLIST.md`.
+Replace placeholders:
+
+| Placeholder | Replacement |
+|-------------|-------------|
+| `[PluginName]` | actual PluginName (e.g. `SimpleDelay`) |
+| `[Version]` | `1.0.0` (initial version for all new plugins) |
+
+```powershell
+$checklistSrc = "D:\Dev\PluginSkeleton\template\CHECKLIST.md"
+$checklistDst = "$dst\CHECKLIST.md"
+(Get-Content $checklistSrc -Raw) `
+    -replace '\[PluginName\]', $PluginName `
+    -replace '\[Version\]',    '1.0.0' |
+    Set-Content $checklistDst -Encoding utf8
+```
+
+### 7. Update .claude/CLAUDE.md Active Plugin section
 
 In `$dst\.claude\CLAUDE.md`, replace the Active Plugin table values:
 
@@ -208,7 +227,7 @@ In `$dst\.claude\CLAUDE.md`, replace the Active Plugin table values:
 | Last completed | none |
 ```
 
-### 7. Print directory tree
+### 8. Print directory tree
 
 ```powershell
 Get-ChildItem -Path $dst -Recurse |
@@ -218,7 +237,7 @@ Get-ChildItem -Path $dst -Recurse |
     Sort-Object
 ```
 
-### 8. Confirm
+### 9. Confirm
 
 ```
 new-plugin complete
@@ -237,6 +256,7 @@ Files created:
   .ideas/parameter-spec.md
   .ideas/plan.md
   .ideas/architecture.md
+  CHECKLIST.md
 
 Root CMakeLists.txt -> add_subdirectory(plugins/[PluginName])
 .claude/CLAUDE.md   -> Active Plugin: [PluginName], stage: planning

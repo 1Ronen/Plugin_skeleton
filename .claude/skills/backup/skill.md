@@ -161,6 +161,10 @@ Skeleton repo: [commit hash] — [N] files changed
                pushed → github.com/1Ronen/plugin-skeleton
 
 Both repos: confirmed pushed.
+
+⚠  Update CHECKLIST.md
+   Mark Stage 5 (QA) and Stage 7 (Installer) complete in:
+   D:\Dev\Plugins\[PluginName]\CHECKLIST.md
 ```
 
 ### UNCHANGED path:
@@ -177,6 +181,10 @@ Skeleton repo: [commit hash] — [N] files changed
                pushed → github.com/1Ronen/plugin-skeleton
 
 Both repos: confirmed pushed.
+
+⚠  Update CHECKLIST.md
+   Mark Stage 5 (QA) complete in:
+   D:\Dev\Plugins\[PluginName]\CHECKLIST.md
 ```
 
 ## Constraints
