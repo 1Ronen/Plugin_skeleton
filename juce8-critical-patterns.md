@@ -399,6 +399,12 @@ and CI runners. NSIS resolves all relative paths from the **current working dire
 - **EULA and README path convention**: EULA lives in the versioned subfolder (`"eula.txt"`),
   README lives in `installer\` (`"..\README.txt"`). Both resolve correctly when makensis runs
   from the versioned dir.
+- **VST3 `File` directive** — never use an absolute path. Use a path relative to the `.nsi`
+  file, resolving up two levels to the plugin root:
+  ```nsis
+  File /r "..\..\build\plugins\[PluginName]\[PluginName]_artefacts\Release\VST3\[PluginName].vst3"
+  ```
+  `installer\v[Version]\` → `..\..\` → plugin root → `build\plugins\...`
 
 ### Common NSIS mistakes
 
@@ -412,6 +418,7 @@ and CI runners. NSIS resolves all relative paths from the **current working dire
 | Installer built into root `installer/` | Overwrites previous version, no rollback | Always use `installer\v[X.X.X]\` subfolder |
 | Version absent from OutFile name | Can't distinguish versions on disk | Always include version in filename |
 | Absolute icon path (`D:\Dev\...`) | Compile fails on CI runner | Use `"..\logo.ico"` with `logo.ico` in `installer\` |
+| Absolute VST3 path in `File /r` | Compile fails on CI runner | Use `"..\..\build\plugins\...\Plugin.vst3"` |
 | Running `makensis.exe` from repo root | Relative paths resolve wrong, compile fails | Run from versioned subfolder with `Push-Location` |
 
 ---

@@ -201,7 +201,7 @@ VIAddVersionKey /LANG=${LANG_ENGLISH} "LegalCopyright"  "Copyright VENDOR"
 Section "VST3 Plugin" SEC_VST3
     SectionIn RO
     SetOutPath "$INSTDIR"
-    File /r "VST3_SOURCE_PATH\PRODUCT_NAME.vst3"
+    File /r "..\..\build\plugins\ACTIVE_PLUGIN\ACTIVE_PLUGIN_artefacts\Release\VST3\ACTIVE_PLUGIN.vst3"
     WriteUninstaller "$INSTDIR\Uninstall PRODUCT_NAME.exe"
     WriteRegStr   HKLM "Software\Microsoft\Windows\CurrentVersion\Uninstall\VENDOR_ACTIVE_PLUGIN" \
                        "DisplayName"     "PRODUCT_NAME"
@@ -348,6 +348,8 @@ To install locally: run the .exe as administrator.
 - **All NSIS file paths must be relative** — absolute local paths (e.g. `D:\Dev\PluginSkeleton\...`) fail on CI runners
 - **Icon path in NSIS**: `"..\logo.ico"` (relative to the versioned `.nsi` file, resolved from the `installer\` parent)
 - **Run `makensis.exe` from the versioned subfolder** (`Push-Location installer\v[Version]`), not from repo root — NSIS resolves relative paths from CWD, not from the `.nsi` file location
+- **VST3 `File` directive must use a path relative to the `.nsi` file location** — never absolute. Pattern: `File /r "..\..\build\plugins\[PluginName]\[PluginName]_artefacts\Release\VST3\[PluginName].vst3"` (two levels up from `installer\v[Version]\` reaches the plugin root where `build\` lives)
+- **Always test compilation locally** before committing — run `Push-Location installer\v[Version]; makensis.exe script.nsi; Pop-Location` and confirm `.exe` is created
 
 ## Output Format
 
