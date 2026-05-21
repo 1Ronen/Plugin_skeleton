@@ -72,22 +72,7 @@
 
 ---
 
-## STAGE 6 — Audio QA (Plugin Doctor)
-
-- [ ] Plugin Doctor report exported to `qa\plugin-doctor-report.txt`
-- [ ] Noise floor below −100 dB
-- [ ] No aliasing detected
-- [ ] THD at Drive=0% below 1%
-- [ ] No zipper noise on any parameter
-- [ ] CPU single instance below 5%
-- [ ] Reported latency matches actual latency
-- [ ] Stereo balance below 0.5 dB
-- [ ] `qa\qa-audio-v[Version].md` written — all 7 metrics PASS
-- [ ] `qa-report.md` updated — `Audio QA: PASS`
-
----
-
-## STAGE 7 — Installer
+## STAGE 6 — Installer
 
 - [ ] `installer\EULA.txt` present — [PluginName], vendor, year, version filled in
 - [ ] `installer\README.txt` present — quick start, parameter reference, support info
@@ -105,7 +90,7 @@
 
 ---
 
-## STAGE 8 — Release
+## STAGE 7 — Release
 
 - [ ] Version bumped in `creative-brief.md`
 - [ ] Version bumped in root `CMakeLists.txt`

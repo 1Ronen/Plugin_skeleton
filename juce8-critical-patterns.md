@@ -469,6 +469,19 @@ not exist in JUCE 8 and causes a C2039 compile error.
 
 ---
 
+## Audio QA Tools
+
+### Plugin Doctor — effects only
+
+Plugin Doctor can only analyze audio **effects** (FX plugins). It requires audio input to
+measure noise floor, THD, aliasing, and CPU. It has no MIDI input and cannot trigger
+instrument plugins (synths, samplers, drum machines).
+
+**Do not use Plugin Doctor for instrument plugins.** It will not produce valid results.
+For instruments, QA is limited to pluginval + manual listening tests in a DAW.
+
+---
+
 ## Git Push Policy
 
 - **All pushes go through backup skill only** — never run `git push` manually during active development

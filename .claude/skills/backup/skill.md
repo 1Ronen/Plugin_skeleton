@@ -163,7 +163,7 @@ Skeleton repo: [commit hash] — [N] files changed
 Both repos: confirmed pushed.
 
 ⚠  Update CHECKLIST.md
-   Mark Stage 5 (QA) and Stage 7 (Installer) complete in:
+   Mark Stage 5 (QA) and Stage 6 (Installer) complete in:
    D:\Dev\Plugins\[PluginName]\CHECKLIST.md
 ```
 
