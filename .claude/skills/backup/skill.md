@@ -55,6 +55,14 @@ Read `D:\Dev\Plugins\[ActivePlugin]\.ideas\creative-brief.md`.
 Extract `Version:` field (e.g. `1.2.0`).
 Use today's date in `YYYY-MM-DD` format.
 
+## Step 2.5 — Read Linear issue ID
+
+Read `D:\Dev\Plugins\[ActivePlugin]\linear-issue.txt`.
+Trim all whitespace. Store as `LinearID`.
+
+- If `LinearID` is non-empty (e.g. `ORI-12`): issue ID is active — append to commit messages below.
+- If `LinearID` is empty: commit without ID.
+
 ## Step 3 — Run version-check
 
 Run version-check skill for [ActivePlugin].
@@ -94,10 +102,15 @@ Write current version to `D:\Dev\Plugins\[ActivePlugin]\installer\installer-vers
 
 **c. Git add + commit + push — plugins repo**
 
+Build commit message:
+- Base: `"release: [PluginName] v[version] — installer included"`
+- If `LinearID` non-empty: append ` [LinearID]`
+
 ```powershell
 cd D:\Dev\Plugins
 git add -A
-git commit -m "release: [PluginName] v[version] — installer included"
+git commit -m "release: [PluginName] v[version] — installer included [LinearID]"
+# omit [LinearID] token if empty
 git push origin main
 ```
 
@@ -122,10 +135,15 @@ No installer built.
 
 **a. Git add + commit + push — plugins repo**
 
+Build commit message:
+- Base: `"fix: [PluginName] v[version] — [YYYY-MM-DD]"`
+- If `LinearID` non-empty: append ` [LinearID]`
+
 ```powershell
 cd D:\Dev\Plugins
 git add -A
-git commit -m "fix: [PluginName] v[version] — [YYYY-MM-DD]"
+git commit -m "fix: [PluginName] v[version] — [YYYY-MM-DD] [LinearID]"
+# omit [LinearID] token if empty
 git push origin main
 ```
 

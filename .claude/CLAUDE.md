@@ -72,6 +72,18 @@ Push policy: backup skill only. `qa-report.md` Status: PASS required. Both repos
 4. `debug-agent` is the only agent that touches broken code — others stop and flag.
 5. `knowledge-agent` fires after every `debug-agent` success — every fix becomes a KB entry.
 
+## Linear
+
+| Field | Value |
+|---|---|
+| Workspace | Orient Plugins |
+| Projects | AtmoKick \| Plugin Skeleton \| Marketing |
+| Issue file | `plugins\[Name]\linear-issue.txt` |
+| GitHub sync | enabled |
+
+Write the active issue ID (e.g. `ORI-12`) into the plugin's `linear-issue.txt` before running `/backup`.
+Leave blank when no issue is active — backup skill commits without an ID.
+
 ## References
 
 Studio identity: `studio-identity.md`

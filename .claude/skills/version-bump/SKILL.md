@@ -88,6 +88,10 @@ Plugin: [Name]
 
 creative-brief.md:  [OldVersion] -> [NewVersion]
 CMakeLists.txt:     [CmakeOldVersion] -> [NewVersion]
+
+Next step: Create a Linear issue for this version cycle
+           and add the issue ID to linear-issue.txt:
+           D:\Dev\Plugins\[Name]\linear-issue.txt
 ```
 
 If either file had no version field found:
