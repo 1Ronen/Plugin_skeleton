@@ -5,8 +5,9 @@
 # [Category]    — VST3 category string (e.g. "Fx", "Fx|Dynamics", "Instrument|Synth")
 
 juce_add_plugin([PluginName]
-    COMPANY_NAME             "YourStudio"
-    PLUGIN_MANUFACTURER_CODE "YrSt"
+    COMPANY_NAME             "Orient Plugins"
+    BUNDLE_ID                "com.orientplugins.[pluginname]"
+    PLUGIN_MANUFACTURER_CODE "OrPl"
     PLUGIN_CODE              "[PluginCode]"
     FORMATS                  VST3
     PRODUCT_NAME             "[ProductName]"
